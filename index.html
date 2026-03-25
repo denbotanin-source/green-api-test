@@ -2,216 +2,99 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GREEN-API Тестовое задание</title>
+    <title>GREEN-API Тестовое</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 40px auto;
-            padding: 20px;
-            background: #f5f5f5;
-        }
-        .container {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        input, button {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            font-size: 16px;
-        }
-        button {
-            background-color: #25D366;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #128C7E;
-        }
-        textarea {
-            width: 100%;
-            height: 200px;
-            margin-top: 10px;
-            font-family: monospace;
-            resize: vertical;
-        }
-        h2 {
-            margin-top: 20px;
-        }
-        hr {
-            margin: 20px 0;
-        }
-        .phone-input {
-            display: flex;
-            gap: 10px;
-        }
-        .phone-input input {
-            flex: 1;
-        }
+        body { font-family: Arial; max-width: 500px; margin: 40px auto; padding: 20px; }
+        input, button { width: 100%; padding: 10px; margin: 8px 0; border-radius: 5px; border: 1px solid #ccc; }
+        button { background: #25D366; color: white; border: none; cursor: pointer; }
+        textarea { width: 100%; height: 150px; margin-top: 10px; font-family: monospace; }
+        .row { display: flex; gap: 10px; }
+        .row input { flex: 1; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>GREEN-API Тестовое задание</h1>
+    <h2>Параметры подключения</h2>
+    <input type="text" id="id" placeholder="idInstance">
+    <input type="text" id="token" placeholder="apiTokenInstance">
 
-        <h2>Параметры подключения</h2>
-        <input type="text" id="idInstance" placeholder="idInstance" autocomplete="off">
-        <input type="text" id="apiTokenInstance" placeholder="apiTokenInstance" autocomplete="off">
+    <button onclick="call('getSettings')">getSettings</button>
+    <button onclick="call('getStateInstance')">getStateInstance</button>
 
-        <h2>Методы API</h2>
-        <button onclick="callGetSettings()">getSettings</button>
-        <button onclick="callGetStateInstance()">getStateInstance</button>
-
-        <h3>Отправить сообщение</h3>
-        <div class="phone-input">
-            <input type="text" id="phoneNumber" placeholder="Номер телефона (например, 79001234567)">
-            <input type="text" id="messageText" placeholder="Текст сообщения">
-        </div>
-        <button onclick="callSendMessage()">sendMessage</button>
-
-        <h3>Отправить файл по URL</h3>
-        <div class="phone-input">
-            <input type="text" id="filePhone" placeholder="Номер телефона">
-            <input type="text" id="fileUrl" placeholder="URL файла (например, https://example.com/image.jpg)">
-        </div>
-        <button onclick="callSendFileByUrl()">sendFileByUrl</button>
-
-        <h2>Результат выполнения</h2>
-        <textarea id="resultArea" readonly placeholder="Здесь будет ответ от API..."></textarea>
+    <h3>Отправить сообщение</h3>
+    <div class="row">
+        <input type="text" id="phone" placeholder="Номер (79001234567)">
+        <input type="text" id="msg" placeholder="Текст">
     </div>
+    <button onclick="sendMessage()">sendMessage</button>
+
+    <h3>Отправить файл по URL</h3>
+    <div class="row">
+        <input type="text" id="filePhone" placeholder="Номер">
+        <input type="text" id="url" placeholder="URL файла">
+    </div>
+    <button onclick="sendFile()">sendFileByUrl</button>
+
+    <h3>Результат</h3>
+    <textarea id="result" readonly></textarea>
 
     <script>
-        const API_BASE = "https://api.green-api.com";
-
-        function getInstanceData() {
-            const idInstance = document.getElementById("idInstance").value.trim();
-            const apiToken = document.getElementById("apiTokenInstance").value.trim();
-            if (!idInstance || !apiToken) {
-                alert("Введите idInstance и apiTokenInstance");
-                return null;
-            }
-            return { idInstance, apiToken };
+        const base = "https://api.green-api.com";
+        
+        function getCreds() {
+            let id = document.getElementById("id").value.trim();
+            let token = document.getElementById("token").value.trim();
+            if (!id || !token) { alert("Введите idInstance и token"); return null; }
+            return { id, token };
         }
 
-        function showResult(data) {
-            document.getElementById("resultArea").value = JSON.stringify(data, null, 2);
-        }
-
-        async function callGetSettings() {
-            const { idInstance, apiToken } = getInstanceData();
-            if (!idInstance) return;
-
-            const url = `${API_BASE}/waInstance${idInstance}/getSettings/${apiToken}`;
+        async function call(method) {
+            let creds = getCreds();
+            if (!creds) return;
             try {
-                const response = await fetch(url);
-                const data = await response.json();
-                showResult(data);
-            } catch (error) {
-                showResult({ error: error.message });
-            }
+                let res = await fetch(`${base}/waInstance${creds.id}/${method}/${creds.token}`);
+                let data = await res.json();
+                document.getElementById("result").value = JSON.stringify(data, null, 2);
+            } catch(e) { document.getElementById("result").value = e.message; }
         }
 
-        async function callGetStateInstance() {
-            const { idInstance, apiToken } = getInstanceData();
-            if (!idInstance) return;
-
-            const url = `${API_BASE}/waInstance${idInstance}/getStateInstance/${apiToken}`;
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-                showResult(data);
-            } catch (error) {
-                showResult({ error: error.message });
-            }
-        }
-
-        async function callSendMessage() {
-            const { idInstance, apiToken } = getInstanceData();
-            if (!idInstance) return;
-
-            let phone = document.getElementById("phoneNumber").value.trim();
-            const message = document.getElementById("messageText").value.trim();
-
-            if (!phone || !message) {
-                alert("Введите номер телефона и текст сообщения");
-                return;
-            }
-
-            // Форматирование номера
-            phone = phone.replace(/\D/g, '');
-            if (!phone.startsWith('7') && !phone.startsWith('8')) {
-                alert("Номер должен начинаться с 7 или 8");
-                return;
-            }
+        async function sendMessage() {
+            let creds = getCreds();
+            if (!creds) return;
+            let phone = document.getElementById("phone").value.replace(/\D/g, '');
             if (phone.startsWith('8')) phone = '7' + phone.slice(1);
-
-            const chatId = `${phone}@c.us`;
-
-            const url = `${API_BASE}/waInstance${idInstance}/sendMessage/${apiToken}`;
-            const body = {
-                chatId: chatId,
-                message: message
-            };
-
+            let msg = document.getElementById("msg").value;
+            if (!phone || !msg) { alert("Введите номер и текст"); return; }
+            
             try {
-                const response = await fetch(url, {
+                let res = await fetch(`${base}/waInstance${creds.id}/sendMessage/${creds.token}`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(body)
+                    body: JSON.stringify({ chatId: phone + "@c.us", message: msg })
                 });
-                const data = await response.json();
-                showResult(data);
-            } catch (error) {
-                showResult({ error: error.message });
-            }
+                let data = await res.json();
+                document.getElementById("result").value = JSON.stringify(data, null, 2);
+                if (data.idMessage) alert("✅ Отправлено!");
+            } catch(e) { alert("Ошибка: " + e.message); }
         }
 
-        async function callSendFileByUrl() {
-            const { idInstance, apiToken } = getInstanceData();
-            if (!idInstance) return;
-
-            let phone = document.getElementById("filePhone").value.trim();
-            const fileUrl = document.getElementById("fileUrl").value.trim();
-
-            if (!phone || !fileUrl) {
-                alert("Введите номер телефона и URL файла");
-                return;
-            }
-
-            phone = phone.replace(/\D/g, '');
-            if (!phone.startsWith('7') && !phone.startsWith('8')) {
-                alert("Номер должен начинаться с 7 или 8");
-                return;
-            }
+        async function sendFile() {
+            let creds = getCreds();
+            if (!creds) return;
+            let phone = document.getElementById("filePhone").value.replace(/\D/g, '');
             if (phone.startsWith('8')) phone = '7' + phone.slice(1);
-
-            const chatId = `${phone}@c.us`;
-
-            const url = `${API_BASE}/waInstance${idInstance}/sendFileByUrl/${apiToken}`;
-            const body = {
-                chatId: chatId,
-                urlFile: fileUrl,
-                fileName: "file"
-            };
-
+            let url = document.getElementById("url").value;
+            if (!phone || !url) { alert("Введите номер и URL"); return; }
+            
             try {
-                const response = await fetch(url, {
+                let res = await fetch(`${base}/waInstance${creds.id}/sendFileByUrl/${creds.token}`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(body)
+                    body: JSON.stringify({ chatId: phone + "@c.us", urlFile: url, fileName: url.split('/').pop() })
                 });
-                const data = await response.json();
-                showResult(data);
-            } catch (error) {
-                showResult({ error: error.message });
-            }
+                let data = await res.json();
+                document.getElementById("result").value = JSON.stringify(data, null, 2);
+                if (data.idMessage) alert("✅ Файл отправлен!");
+            } catch(e) { alert("Ошибка: " + e.message); }
         }
     </script>
 </body>
